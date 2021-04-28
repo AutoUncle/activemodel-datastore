@@ -183,7 +183,10 @@ module ActiveModel::Datastore
 
     run_callbacks :update do
       entity = build_entity
-      self.class.retry_on_exception? { CloudDatastore.dataset.save entity }
+      if (success = self.class.retry_on_exception? { CloudDatastore.dataset.save entity })
+        reload!
+      end
+      success
     end
   end
 
@@ -205,6 +208,7 @@ module ActiveModel::Datastore
       success = self.class.retry_on_exception? { CloudDatastore.dataset.save entity }
       self.id = entity.key.id if success
       self.parent_key_id = entity.key.parent.id if entity.key.parent.present?
+      reload! if success
       success
     end
   end
